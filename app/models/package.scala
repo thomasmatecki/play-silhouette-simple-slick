@@ -1,18 +1,19 @@
+import com.mohiva.play.silhouette.api.Identity
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.ProvenShape
 import slick.lifted.ProvenShape.proveShapeOf
 
 package object models {
 
-  case class User(id: String,
+  case class User(id: Option[Int],
                   firstName: Option[String],
                   lastName: Option[String],
                   email: Option[String],
                   providerID: String,
-                  providerKey: String)
+                  providerKey: String) extends Identity
 
   class Users(tag: Tag) extends Table[User](tag, "USER") {
-    def id = column[String]("USER_ID", O.PrimaryKey)
+    def id = column[Option[Int]]("USER_ID", O.PrimaryKey, O.AutoInc)
     def firstName = column[Option[String]]("FIRST_NAME")
     def lastName = column[Option[String]]("LAST_NAME")
     def email = column[Option[String]]("EMAIL")
@@ -22,21 +23,20 @@ package object models {
     def * : ProvenShape[User] = (id, firstName, lastName, email, providerID, providerKey) <> (User.tupled, User.unapply)
   }
 
-  case class PasswordInfo(hasher: String,
-                          password: String,
-                          salt: Option[String],
-                          loginInfoId: Long)
+  case class Password(key: String,
+                      hasher: String,
+                      hash: String,
+                      salt: Option[String])
 
-  class PasswordInfos(tag: Tag) extends Table[PasswordInfo](tag, "PASSWORD_INFO") {
+  class Passwords(tag: Tag) extends Table[Password](tag, "PASSWORD") {
+    def key = column[String]("PROVIDER_KEY", O.PrimaryKey)
     def hasher = column[String]("HASHER")
-    def password = column[String]("PASSWORD")
+    def hash = column[String]("HASH")
     def salt = column[Option[String]]("SALT")
-    def userId = column[Long]("LOGIN_INFO_ID")
-
-    def * = (hasher, password, salt, userId) <> (PasswordInfo.tupled, PasswordInfo.unapply)
+    def * = (key, hasher, hash, salt) <> (Password.tupled, Password.unapply)
   }
 
   val userTable = TableQuery[Users]
-  val passwordInfoTable = TableQuery[PasswordInfos]
+  val passwordTable = TableQuery[Passwords]
 
 }

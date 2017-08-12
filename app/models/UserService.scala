@@ -16,13 +16,11 @@ class UserService @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
 
   import profile.api._
 
-  override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = {
-    db.run(
-      userTable
-        .filter(user => user.providerKey === loginInfo.providerKey && user.providerID === loginInfo.providerID)
-        .result
-        .headOption)
-      .map(_.map(user => user))
-  }
+  override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = db.run(
+    userTable
+      .filter(user => user.providerKey === loginInfo.providerKey && user.providerID === loginInfo.providerID)
+      .result
+      .headOption)
+
 }
 
