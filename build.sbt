@@ -11,8 +11,8 @@ scalaVersion := "2.12.2"
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.0" % Test
 libraryDependencies += guice
 libraryDependencies ++= Seq(
-  "net.codingwell" %% "scala-guice" % "4.1.0",
-  "com.iheart" %% "ficus" % "1.4.1"
+  "net.codingwell" %% "scala-guice" % "4.1.0"
+  //"com.iheart" %% "ficus" % "1.4.1"
 )
 
 libraryDependencies ++= Seq(

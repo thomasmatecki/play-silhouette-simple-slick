@@ -10,8 +10,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class PasswordDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider,
-                            userService: UserService)(implicit ec: ExecutionContext)
+class PasswordDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends DelegableAuthInfoDAO[PasswordInfo]
     with HasDatabaseConfigProvider[JdbcProfile] {
 
@@ -28,7 +27,7 @@ class PasswordDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
   override def add(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] =
     db.run(
       passwordTable += Password(loginInfo.providerKey, authInfo.hasher, authInfo.password, authInfo.salt)
-    ).map(res => {
+    ).map((res: Int) => {
       authInfo
     })
 
@@ -50,6 +49,4 @@ class PasswordDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
   override def remove(loginInfo: LoginInfo): Future[Unit] = db.run(
     passwordTable.filter(password => password.key === loginInfo.providerKey).delete
   ).map(i => Unit)
-
-
 }
