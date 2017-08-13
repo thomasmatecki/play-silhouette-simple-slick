@@ -14,17 +14,17 @@ import scala.util.{Failure, Success}
 class PasswordDAOSpec @Inject()(implicit ec: ExecutionContext) extends Specification {
 
   val cache = Application.instanceCache[PasswordDAO]
-  val loader = new WithApplicationLoader() {}
-
 
   "PasswordDAO" should {
 
     val providerKey: String = System.currentTimeMillis.toString
     val loginInfo = LoginInfo("Test", providerKey)
     val passwordInfo = PasswordInfo("TestHasher", "SecretPassword", None)
+    val loader = new WithApplicationLoader() {}
+
     val dao: PasswordDAO = cache(loader.app)
 
-    "insert a record into the databasem, then retrieve the same record" in {
+    "insert a record into the database, then retrieve the same record" in {
 
       Await.result({
         dao.add(loginInfo, passwordInfo) andThen {
@@ -58,5 +58,6 @@ class PasswordDAOSpec @Inject()(implicit ec: ExecutionContext) extends Specifica
 
       res should_==()
     }
+
   }
 }
