@@ -15,13 +15,12 @@ class UserServiceSpec @Inject()(implicit ec: ExecutionContext) extends Specifica
 
     val cache = Application.instanceCache[UserService]
     val loader = new WithApplicationLoader() {}
-    val formData = SignUpForm.Data("Thomas", "Matecki", "thomas.matecki@gmail.com", "SecretPassword")
+    val formData = SignUpForm.Data("John", "Smith", "John.Smith@gmail.com", "SecretPassword")
 
-    "create a new record into the database" in {
+    "create a new record in the database" in {
 
       val userService = cache(loader.app)
-      val res = Await.result(userService.create(formData), Duration.Inf) should be(User(None, Some("Thomas"), Some("Matecki"), Some("thomas.matecki@gmail.com"), "credentials", "thomas.matecki@gmail.com"))
+      val res = Await.result(userService.create(formData), Duration.Inf) should be(User(None, Some("John"), Some("Smith"), Some("John.Smith@gmail.com"), "credentials", "JohnSmith@gmail.com"))
     }
-
   }
 }
