@@ -29,9 +29,10 @@ class UserService @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
       .result
       .headOption)
 
-  def create(data: SignUpForm.Data): Future[User] = {
+  def create(data: SignUpForm.Data): Future[LoginInfo] = {
 
     val user = User(
+
       id = None,
       firstName = Some(data.firstName),
       lastName = Some(data.lastName),
@@ -48,7 +49,7 @@ class UserService @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
         val authInfo: PasswordInfo = passwordHasher.hash(data.password)
         authInfoRepository.add(loginInfo, authInfo)
       }
-    } map { _id => user.copy(id = _id) }
+    } map { _id => LoginInfo(CredentialsProvider.ID, user.email.get) }
 
   }
 }

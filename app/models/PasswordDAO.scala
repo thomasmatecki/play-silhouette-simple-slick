@@ -16,13 +16,18 @@ class PasswordDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
 
   import profile.api._
 
-  override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] =
-    db.run(
-      passwordTable
-        .filter(password => password.key === loginInfo.providerKey)
-        .result
-        .headOption)
-      .map(_.map(password => PasswordInfo(password.hasher, password.hash, password.salt)))
+  override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
+    val result =
+      db.run(
+        passwordTable
+          .filter(password => password.key === loginInfo.providerKey)
+          .result
+          .headOption)
+        .map(_.map(password => PasswordInfo(password.hasher, password.hash, password.salt)))
+
+    result
+  }
+
 
   override def add(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] =
     db.run(

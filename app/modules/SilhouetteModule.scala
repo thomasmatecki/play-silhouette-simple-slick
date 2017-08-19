@@ -24,17 +24,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class SilhouetteModule extends AbstractModule with ScalaModule {
-
   /**
     * @see https://www.playframework.com/documentation/2.6.x/ScalaDependencyInjection#programmatic-bindings
     */
+
   override def configure(): Unit = {
+
     bind[Silhouette[DefaultEnv]].to[SilhouetteProvider[DefaultEnv]]
     bind[DelegableAuthInfoDAO[PasswordInfo]].to[PasswordDAO]
+
     bind[PasswordHasher].toInstance(new BCryptPasswordHasher)
-
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator())
-
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
     bind[EventBus].toInstance(EventBus())
     bind[Clock].toInstance(Clock())
@@ -108,6 +108,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
   @Provides
   @Named("authenticator-crypter")
   def provideAuthenticatorCrypter(configuration: Configuration): Crypter = {
+
     val config = JcaCrypterSettings("SecretKey")
 
     new JcaCrypter(config)
