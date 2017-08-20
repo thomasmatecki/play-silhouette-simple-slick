@@ -70,14 +70,17 @@ class AuthenticationController @Inject()(cc: ControllerComponents,
       },
 
       success => {
+
         credentialsProvider.authenticate(Credentials(success.email, success.password)).flatMap {
+
           authService.create(_)
             .flatMap(authService.init(_))
             .flatMap(authService.embed(_, Redirect(routes.HomeController.index())))
-        }.recover {
-          case e: ProviderException =>
-            Redirect(routes.AuthenticationController.signInForm())
+
         }
+      }.recover {
+        case e: ProviderException =>
+          Redirect(routes.HomeController.index())
       }
     )
   }
