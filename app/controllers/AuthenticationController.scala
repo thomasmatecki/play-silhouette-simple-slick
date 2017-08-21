@@ -2,10 +2,10 @@ package controllers
 
 import javax.inject.Inject
 
-import com.mohiva.play.silhouette.api.exceptions.ProviderException
-import com.mohiva.play.silhouette.api.services.AuthenticatorResult
+import com.mohiva.play.silhouette.api.services.{AuthenticatorResult, AuthenticatorService}
 import com.mohiva.play.silhouette.api.util.Credentials
 import com.mohiva.play.silhouette.api.{LoginInfo, Silhouette}
+import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import forms.{SignInForm, SignUpForm}
 import models.UserService
@@ -31,7 +31,7 @@ class AuthenticationController @Inject()(cc: ControllerComponents,
   extends AbstractController(cc)
     with I18nSupport {
 
-  val authService = silhouette.env.authenticatorService
+  val authService: AuthenticatorService[CookieAuthenticator] = silhouette.env.authenticatorService
 
 
   def signUpForm = silhouette.UnsecuredAction.async { implicit request: Request[AnyContent] =>
@@ -72,22 +72,21 @@ class AuthenticationController @Inject()(cc: ControllerComponents,
 
       success => {
 
-        Logger.debug(s"Attempting to login ${success.email}, ${success.password}")
+        Logger.debug(s"Attempting Login for ${success.email}, ${success.password}")
 
-        val authRes: Future[LoginInfo] = credentialsProvider.authenticate(Credentials(success.email, success.password))
+        credentialsProvider.authenticate(credentials = Credentials(success.email, success.password))
+          .flatMap { loginInfo =>
 
-        authRes.flatMap(u => {
+            val cookieAuthenticator: Future[CookieAuthenticator] = authService.create(loginInfo)
 
-          authService.create(u)
-            .flatMap(authService.init(_))
-            .flatMap(authService.embed(_, Redirect(routes.HomeController.index())))
+            val cookie: Future[Cookie] = cookieAuthenticator.flatMap(authService.init(_))
 
-        })
-      }.recover {
-        case e: ProviderException => {
-          Logger.debug(s"Provider Exception: ${e.getMessage}")
+            cookie.flatMap(authService.embed(_, Redirect(routes.HomeController.index())))
 
-          Redirect(routes.HomeController.index())
+          }.recover {
+
+          case _ =>
+            Ok(views.html.signin)
         }
       }
     )
