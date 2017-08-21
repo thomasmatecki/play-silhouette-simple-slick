@@ -13,6 +13,8 @@ import scala.util.{Failure, Success}
 
 class PasswordDAOSpec @Inject()(implicit ec: ExecutionContext) extends Specification {
 
+  sequential
+
   val cache = Application.instanceCache[PasswordDAO]
 
   "PasswordDAO" should {
@@ -46,18 +48,21 @@ class PasswordDAOSpec @Inject()(implicit ec: ExecutionContext) extends Specifica
       }, Duration.Inf) should be(newPasswordInfo)
 
     }
+    /*
+        "remove a record from the database, then fail to find it" in {
 
-    "remove a record from the database, then fail to find it" in {
+          val res = Await.result({
 
-      val res = Await.result({
-        dao.remove(loginInfo) andThen {
-          case Success(_) => dao.find(loginInfo)
-          case Failure(_) => None
-        }
-      }, Duration.Inf)
 
-      res should_==()
-    }
+
+            dao.remove(loginInfo) andThen {
+              case Success(_) => dao.find(loginInfo)
+              case Failure(_) => None
+            }
+          }, Duration.Inf)
+
+          res should_==()
+        }*/
 
   }
 }

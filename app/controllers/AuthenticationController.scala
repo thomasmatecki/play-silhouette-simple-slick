@@ -9,6 +9,7 @@ import com.mohiva.play.silhouette.api.{LoginInfo, Silhouette}
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import forms.{SignInForm, SignUpForm}
 import models.UserService
+import play.api.Logger
 import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.mvc._
@@ -71,16 +72,23 @@ class AuthenticationController @Inject()(cc: ControllerComponents,
 
       success => {
 
-        credentialsProvider.authenticate(Credentials(success.email, success.password)).flatMap {
+        Logger.debug(s"Attempting to login ${success.email}, ${success.password}")
 
-          authService.create(_)
+        val authRes: Future[LoginInfo] = credentialsProvider.authenticate(Credentials(success.email, success.password))
+
+        authRes.flatMap(u => {
+
+          authService.create(u)
             .flatMap(authService.init(_))
             .flatMap(authService.embed(_, Redirect(routes.HomeController.index())))
 
-        }
+        })
       }.recover {
-        case e: ProviderException =>
+        case e: ProviderException => {
+          Logger.debug(s"Provider Exception: ${e.getMessage}")
+
           Redirect(routes.HomeController.index())
+        }
       }
     )
   }
