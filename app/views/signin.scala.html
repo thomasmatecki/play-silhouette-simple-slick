@@ -3,6 +3,13 @@
     @import helper._
 
 @main("Sign In!") {
+
+    @request.flash.get("login-error").map(msg => {
+            <div class="col-md-6 col-md-offset-3 alert alert-danger alert-error">
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+            <strong>@msg</strong>
+            </div>
+    })
     <div class="jumbotron">
     @form(action = routes.AuthenticationController.signInSubmit()) {
         @helper.inputText(signInForm("email"), '_label -> null, '_showConstraints -> false, 'class -> "form-control input-md", 'placeholder -> "email")

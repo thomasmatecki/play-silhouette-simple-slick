@@ -9,7 +9,6 @@ import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import forms.{SignInForm, SignUpForm}
 import models.UserService
-import play.api.Logger
 import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.mvc._
@@ -23,6 +22,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param userService
   * @param silhouette
   */
+
 class AuthenticationController @Inject()(cc: ControllerComponents,
                                          userService: UserService,
                                          silhouette: Silhouette[DefaultEnv],
@@ -72,21 +72,16 @@ class AuthenticationController @Inject()(cc: ControllerComponents,
 
       success => {
 
-        Logger.debug(s"Attempting Login for ${success.email}, ${success.password}")
-
         credentialsProvider.authenticate(credentials = Credentials(success.email, success.password))
           .flatMap { loginInfo =>
 
-            val cookieAuthenticator: Future[CookieAuthenticator] = authService.create(loginInfo)
-
-            val cookie: Future[Cookie] = cookieAuthenticator.flatMap(authService.init(_))
-
-            cookie.flatMap(authService.embed(_, Redirect(routes.HomeController.index())))
+            authService.create(loginInfo)
+              .flatMap(authService.init(_))
+              .flatMap(authService.embed(_, Redirect(routes.HomeController.index())))
 
           }.recover {
-
-          case _ =>
-            Ok(views.html.signin)
+          case e: Exception =>
+            Redirect(routes.AuthenticationController.signInForm()).flashing("login-error" -> e.getMessage)
         }
       }
     )
