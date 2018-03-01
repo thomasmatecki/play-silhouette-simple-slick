@@ -11,6 +11,7 @@
         @helper.inputText(signUpForm("email"))
         @helper.inputPassword(signUpForm("password"))
         <button id="submit" type="submit" value="submit" class="btn btn-lg btn-primary btn-block">Submit</button>
+        <a href="@routes.AuthenticationController.signInForm()">Sign In</a>
     }
     </div>
 }
