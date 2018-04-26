@@ -1,62 +1,18 @@
 # play-silhouette-simple-slick
-Simple Play Application Using Silhouette Library
-
-
-## Technologies :
-- Play! 2.6
-- Sbt 0.13
-- Scala 2.12
-- Scala guice runtime DI
-- Silhouette authentication librarie
-- Slick database librarie
-- MySql 5.6
-
-## Installation :
-1. Download the project as Zip file
-2. Extract the Zip to a folder `my-project` for example
-3. `cd my-project`
-4. `sbt` to install dependencies
+Simple Play! application Using [Silhouette](https://www.silhouette.rocks/) and [Slick](http://slick.lightbend.com/). This app is meant to demo a simple form based login, that persists user identity to a relational database, with fewest possible dependencies and components. It is configured to use bcrypt, so it is (ostensibly) secure.
 
 ## Configuration :
-In this section we will set application configurations in the file `conf/application.conf` :  
-You should update :
+The following environmental variables should be defined:
 - dbname
 - dbuser
 - dbpass
-by your correcte DB informations
 
-```HOCON
-slick.dbs.default.profile = "slick.jdbc.MySQLProfile$"
-slick.dbs.default.db.driver = "com.mysql.cj.jdbc.Driver"
-slick.dbs.default.db.url = "jdbc:mysql://localhost:3306/dbname?serverTimezone=UTC&useSSL=false"
-slick.dbs.default.db.user = dbuser
-slick.dbs.default.db.password = dbpass
-```
-
-NB : I added `serverTimezone=UTC&useSSL=false` to avoid timezone and ssl mysql Errors when running the application  
-
-## Run :
-Go to the sbt console opened in the Installation step and do : `run`. This will run the play application so you can play with using the URL : `http://localhost:9000`
-
-
-## Troubles :
-If the signin does'nt work, you should may be :
-- Disable the `secureCookie` config
-- Set a duration for the  `maxAge` of the cookie. default in this repository is `None` which mean a transient cookie. 
-
-I use this config in local and works well `app/modules/SilhouetteModule.scala` file :
-```scala
-val config = CookieAuthenticatorSettings(
-      cookieName = "id",
-      cookiePath = "/",
-      cookieDomain = None,
-      secureCookie = false,
-      httpOnlyCookie = true,
-      useFingerprinting = true,
-      cookieMaxAge = Some(10.minutes),
-      authenticatorIdleTimeout = None,
-      authenticatorExpiry = 12.hours
-    )
+... as defined in conf/application.conf:
 
 ```
-
+slick.dbs.default.profile = ${JDBC_PROFILE}
+slick.dbs.default.db.driver = ${DB_DRIVER}
+slick.dbs.default.db.url = ${DB_URL}
+slick.dbs.default.db.user = ${DB_USER}
+slick.dbs.default.db.password = ${DB_PASSWORD}
+```
