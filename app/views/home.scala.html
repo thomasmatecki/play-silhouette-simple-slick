@@ -3,5 +3,6 @@
 @main("Your Home!") {
     <div class="jumbotron">
         <h1>Welcome Home @user.firstName @user.lastName</h1>
+        <a href="@routes.AuthenticationController.signOut()">Sign Out</a>
     </div>
 }
