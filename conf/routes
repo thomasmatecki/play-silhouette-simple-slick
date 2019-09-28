@@ -12,6 +12,8 @@ GET         /assets/*file        controllers.Assets.versioned(path="/public", fi
 GET         /signUp              controllers.AuthenticationController.signUpForm
 POST        /signUp              controllers.AuthenticationController.signUpSubmit
 
+GET         /signOut              controllers.AuthenticationController.signOut
+
 GET         /signIn              controllers.AuthenticationController.signInForm
 POST        /signIn              controllers.AuthenticationController.signInSubmit
 
