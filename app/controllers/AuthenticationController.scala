@@ -2,9 +2,10 @@ package controllers
 
 import javax.inject.Inject
 
+import com.mohiva.play.silhouette.api.actions.SecuredRequest
 import com.mohiva.play.silhouette.api.services.{AuthenticatorResult, AuthenticatorService}
 import com.mohiva.play.silhouette.api.util.Credentials
-import com.mohiva.play.silhouette.api.{LoginInfo, Silhouette}
+import com.mohiva.play.silhouette.api.{LoginInfo, LogoutEvent, Silhouette}
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import forms.{SignInForm, SignUpForm}
@@ -86,4 +87,10 @@ class AuthenticationController @Inject()(cc: ControllerComponents,
       }
     )
   }
+     
+ def signOut = silhouette.SecuredAction.async { implicit request: SecuredRequest[DefaultEnv, AnyContent] =>
+   val result = Redirect(routes.AuthenticationController.signInForm())
+   silhouette.env.eventBus.publish(LogoutEvent(request.identity, request))
+   silhouette.env.authenticatorService.discard(request.authenticator, result)
+ }
 }
