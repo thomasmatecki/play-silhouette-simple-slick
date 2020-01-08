@@ -1,8 +1,8 @@
-@(user: Option[models.User] = None)(implicit request: RequestHeader, messagesProvider: MessagesProvider)
-    @import forms.SignInForm
+@import forms.SignInForm
 
+@()(implicit request: MyUserAwareRequestHeader)
 
-@user.fold(
+@request.identity.fold(
     signin(SignInForm.form)
 )(
     user => home(user)

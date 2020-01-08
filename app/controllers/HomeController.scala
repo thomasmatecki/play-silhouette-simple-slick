@@ -10,12 +10,10 @@ import utils.DefaultEnv
 import scala.concurrent.Future
 
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, silhouette: Silhouette[DefaultEnv])
-  extends AbstractController(cc)
-    with I18nSupport {
+class HomeController @Inject()(cc: MyControllerComponents) extends MyAbstractController(cc) {
 
-  def index() = silhouette.UserAwareAction.async { implicit request =>
-    Future.successful(Ok(views.html.index(request.identity)))
+  def index() = UserAwareAction.async { implicit request =>
+    Future.successful(Ok(views.html.index()))
   }
 
 }
