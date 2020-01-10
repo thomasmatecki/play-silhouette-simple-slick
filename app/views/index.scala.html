@@ -1,6 +1,6 @@
 @import forms.SignInForm
 
-@()(implicit request: MyUserAwareRequestHeader)
+@()(implicit request: AppRequestHeader with IdentityAwareProvider[User])
 
 @request.identity.fold(
     signin(SignInForm.form)

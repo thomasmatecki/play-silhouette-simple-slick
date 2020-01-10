@@ -1,21 +1,20 @@
 package controllers
 
-import com.mohiva.play.silhouette.api.{LoginInfo, LogoutEvent}
+import com.mohiva.play.silhouette.api.{ LoginInfo, LogoutEvent }
 import com.mohiva.play.silhouette.api.services.AuthenticatorResult
 import com.mohiva.play.silhouette.api.util.Credentials
 import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
-import forms.{SignInForm, SignUpForm}
+import forms._
 import javax.inject.Inject
 import play.api.data.Form
-import play.api.i18n.I18nSupport
-import play.api.mvc.{Cookie, RequestHeader}
+import play.api.mvc.{ Cookie, RequestHeader }
+import utils.DefaultEnv
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-class AuthenticationController @Inject()(cc: MyControllerComponents)(implicit ec: ExecutionContext)
-    extends MyAbstractController(cc)
-    with I18nSupport {
+class AuthenticationController @Inject()(cc: SilhouetteControllerComponents[DefaultEnv])(implicit ec: ExecutionContext)
+    extends SilhouetteController(cc) {
 
   def signUpForm = UnsecuredAction.async { implicit request =>
     Future.successful(Ok(views.html.signup(SignUpForm.form)))
@@ -27,19 +26,24 @@ class AuthenticationController @Inject()(cc: MyControllerComponents)(implicit ec
       (success: SignUpForm.Data) => {
         userService.retrieve(LoginInfo(CredentialsProvider.ID, success.email)).flatMap {
           case Some(user) =>
-            val conflictForm = SignUpForm.form.fill(success.copy(password = ""))
+            val conflictForm = SignUpForm.form
+              .fill(success.copy(password = ""))
               .withGlobalError(s"Email conflict exists for email address!")
             Future.successful(BadRequest(views.html.signup(conflictForm)))
           case None =>
-            userService.create(success).flatMap { loginInfo =>
-              loginInfoToCookie(loginInfo).flatMap { cookie =>
-                val result = Redirect(routes.HomeController.index())
-                authenticatorService.embed(cookie, result)
+            userService
+              .create(success)
+              .flatMap { loginInfo =>
+                loginInfoToCookie(loginInfo).flatMap { cookie =>
+                  val result = Redirect(routes.HomeController.index())
+                  authenticatorService.embed(cookie, result)
+                }
               }
-            }.recoverWith { case e =>
-              logger.error("Cannot create user", e)
-              Future.successful(AuthenticatorResult(Redirect(routes.AuthenticationController.signInForm)))
-            }
+              .recoverWith {
+                case e =>
+                  logger.error("Cannot create user", e)
+                  Future.successful(AuthenticatorResult(Redirect(routes.AuthenticationController.signInForm)))
+              }
         }
       }
     )
@@ -62,9 +66,10 @@ class AuthenticationController @Inject()(cc: MyControllerComponents)(implicit ec
               val result = Redirect(routes.HomeController.index()).flashing("welcome" -> "Welcome!")
               authenticatorService.embed(cookie, result)
             }
-          }.recover {
-          case e: IdentityNotFoundException =>
-            Redirect(routes.AuthenticationController.signInForm()).flashing("login-error" -> "Invalid user/password")
+          }
+          .recover {
+            case e: IdentityNotFoundException =>
+              Redirect(routes.AuthenticationController.signInForm()).flashing("login-error" -> "Invalid user/password")
 
             case e: Exception =>
               logger.error("Cannot login from unexpected exception!", e)
@@ -80,7 +85,6 @@ class AuthenticationController @Inject()(cc: MyControllerComponents)(implicit ec
     authenticatorService.discard(request.authenticator, result)
   }
 
-  private def loginInfoToCookie(loginInfo: LoginInfo)(implicit rh: RequestHeader): Future[Cookie] = {
+  private def loginInfoToCookie(loginInfo: LoginInfo)(implicit rh: RequestHeader): Future[Cookie] =
     authenticatorService.create(loginInfo).flatMap(authenticatorService.init)
-  }
 }

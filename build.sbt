@@ -30,8 +30,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0"
 )
 
-libraryDependencies += "com.iheart" %% "ficus" % "1.4.7"
-
 libraryDependencies += "com.h2database" % "h2" % "1.4.199"
 
 javaOptions in Universal += "-Dhttp.port=disabled"
