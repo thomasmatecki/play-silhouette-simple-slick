@@ -1,6 +1,7 @@
 package models
 
 import com.google.inject.Inject
+import com.mohiva.play.silhouette.api.LoginInfo
 import forms.SignUpForm
 import org.specs2.mutable._
 import play.api.Application
@@ -21,9 +22,8 @@ class UserServiceSpec @Inject()(implicit ec: ExecutionContext) extends Specifica
     "create a new record in the database" in {
 
       val userService = cache(loader.app)
-      Await.result(
-        userService.create(formData), Duration.Inf
-      ) should be(User(None, Some("John"), Some("Smith"), Some("John.Smith@gmail.com"), "credentials", "JohnSmith@gmail.com"))
+      val info = Await.result(userService.create(formData), Duration.Inf)
+      info.providerKey must be("John.Smith@gmail.com")
     }
   }
 }

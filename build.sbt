@@ -37,3 +37,4 @@ libraryDependencies += "com.h2database" % "h2" % "1.4.199"
 javaOptions in Universal += "-Dhttp.port=disabled"
 
 libraryDependencies += specs2 % Test
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % Test

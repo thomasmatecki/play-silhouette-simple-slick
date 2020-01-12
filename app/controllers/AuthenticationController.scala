@@ -76,8 +76,8 @@ class AuthenticationController @Inject()(cc: MyControllerComponents)(implicit ec
 
   def signOut = SecuredAction.async { implicit request =>
     val result = Redirect(routes.AuthenticationController.signInForm())
-    silhouette.env.eventBus.publish(LogoutEvent(request.identity, request))
-    silhouette.env.authenticatorService.discard(request.authenticator, result)
+    eventBus.publish(LogoutEvent(request.identity, request))
+    authenticatorService.discard(request.authenticator, result)
   }
 
   private def loginInfoToCookie(loginInfo: LoginInfo)(implicit rh: RequestHeader): Future[Cookie] = {

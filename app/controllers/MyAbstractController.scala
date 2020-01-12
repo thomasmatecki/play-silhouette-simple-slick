@@ -2,19 +2,19 @@ package controllers
 
 import com.mohiva.play.silhouette.api.actions._
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
-import com.mohiva.play.silhouette.api.services.AuthenticatorService
-import com.mohiva.play.silhouette.api.util.{ Clock, PasswordHasherRegistry }
-import com.mohiva.play.silhouette.api.{ Authorization, EventBus, Silhouette }
+import com.mohiva.play.silhouette.api.services.{AuthenticatorService, IdentityService}
+import com.mohiva.play.silhouette.api.util.{Clock, PasswordHasherRegistry}
+import com.mohiva.play.silhouette.api.{Authorization, EventBus, Silhouette}
 import com.mohiva.play.silhouette.impl.providers._
 import javax.inject.Inject
-import models.UserService
+import models.{User, UserService}
 import play.api.Logging
 import play.api.http.FileMimeTypes
-import play.api.i18n.{ Langs, MessagesApi }
+import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
 import utils.DefaultEnv
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * An abstract class that contains and exposes all the components need by concrete controllers.
@@ -84,7 +84,7 @@ abstract class MyAbstractController(override protected val controllerComponents:
 
   protected def UserAwareAction = silhouette.UserAwareAction.andThen(new MyUserAwareActionFunction)
 
-  protected def userService: UserService                                 = controllerComponents.userService
+  protected def userService: UserService                   = controllerComponents.identityService.asInstanceOf[UserService]
   protected def credentialsProvider: CredentialsProvider                 = controllerComponents.credentialsProvider
   protected def silhouette: Silhouette[DefaultEnv]                       = controllerComponents.silhouette
   protected def authenticatorService: AuthenticatorService[DefaultEnv#A] = silhouette.env.authenticatorService
@@ -92,7 +92,7 @@ abstract class MyAbstractController(override protected val controllerComponents:
 }
 
 trait SilhouetteComponents {
-  def userService: UserService
+  def identityService: IdentityService[User]
   def authInfoRepository: AuthInfoRepository
   def passwordHasherRegistry: PasswordHasherRegistry
   def clock: Clock
@@ -103,17 +103,17 @@ trait SilhouetteComponents {
 trait MyControllerComponents extends MessagesControllerComponents with SilhouetteComponents
 
 final case class DefaultMyControllerComponents @Inject()(
-    silhouette: Silhouette[DefaultEnv],
-    userService: UserService,
-    authInfoRepository: AuthInfoRepository,
-    passwordHasherRegistry: PasswordHasherRegistry,
-    clock: Clock,
-    credentialsProvider: CredentialsProvider,
-    messagesActionBuilder: MessagesActionBuilder,
-    actionBuilder: DefaultActionBuilder,
-    parsers: PlayBodyParsers,
-    messagesApi: MessagesApi,
-    langs: Langs,
-    fileMimeTypes: FileMimeTypes,
-    executionContext: scala.concurrent.ExecutionContext
+                                                          silhouette: Silhouette[DefaultEnv],
+                                                          identityService: IdentityService[User],
+                                                          authInfoRepository: AuthInfoRepository,
+                                                          passwordHasherRegistry: PasswordHasherRegistry,
+                                                          clock: Clock,
+                                                          credentialsProvider: CredentialsProvider,
+                                                          messagesActionBuilder: MessagesActionBuilder,
+                                                          actionBuilder: DefaultActionBuilder,
+                                                          parsers: PlayBodyParsers,
+                                                          messagesApi: MessagesApi,
+                                                          langs: Langs,
+                                                          fileMimeTypes: FileMimeTypes,
+                                                          executionContext: scala.concurrent.ExecutionContext
 ) extends MyControllerComponents
