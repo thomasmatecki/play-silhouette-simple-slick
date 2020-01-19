@@ -14,7 +14,7 @@
     </div>
     }
 
-    @form(action = routes.AuthenticationController.signUpSubmit()) {
+    @form(action = routes.SignUpController.signUpSubmit()) {
         @helper.inputText(signUpForm("firstName"), Symbol("_label") -> m("firstName"), Symbol("placeholder") -> m("firstName"))
         @helper.inputText(signUpForm("lastName"), Symbol("_label") -> m("lastName"), Symbol("placeholder") -> m("lastName"))
         @helper.inputText(signUpForm("email"), Symbol("_label") -> m("email"), Symbol("placeholder") -> m("email"))
@@ -22,7 +22,7 @@
         @CSRF.formField
 
         <button id="submit" type="submit" value="submit" class="btn btn-lg btn-primary btn-block">Submit</button>
-        <a href="@routes.AuthenticationController.signInForm()">Sign In</a>
+        <a href="@routes.LoginController.loginForm()">Sign In</a>
     }
     </div>
 }

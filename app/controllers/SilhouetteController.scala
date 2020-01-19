@@ -3,7 +3,7 @@ package controllers
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.actions._
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
-import com.mohiva.play.silhouette.api.services.AuthenticatorService
+import com.mohiva.play.silhouette.api.services.{ AuthenticatorResult, AuthenticatorService }
 import com.mohiva.play.silhouette.api.util.{ Clock, PasswordHasherRegistry }
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import javax.inject.Inject
@@ -15,6 +15,7 @@ import play.api.mvc._
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.higherKinds
+import scala.util.Success
 
 abstract class SilhouetteController[E <: Env](
     override protected val controllerComponents: SilhouetteControllerComponents[E])
@@ -93,6 +94,23 @@ abstract class SilhouetteController[E <: Env](
 
   def UserAwareAction: ActionBuilder[AppUserAwareEnvRequest, AnyContent] =
     silhouette.UserAwareAction.andThen(appUserAwareActionTransformer)
+
+  protected def login(loginInfo: LoginInfo)(implicit request: RequestHeader): Future[AuthenticatorResult] = {
+    implicit val ec: ExecutionContext = controllerComponents.executionContext
+    val valueFuture = for {
+      authenticator <- authenticatorService.create(loginInfo)
+      v             <- authenticatorService.init(authenticator)
+    } yield v
+
+    val result = Redirect(routes.HomeController.index()).flashing("welcome" -> "Welcome!")
+    valueFuture.flatMap(authenticatorService.embed(_, result)).andThen {
+      case Success(_) =>
+        for {
+          maybeUser <- userService.retrieve(loginInfo)
+          user      <- maybeUser
+        } eventBus.publish(LoginEvent(user, request))
+    }
+  }
 
   def userService: UserService                       = controllerComponents.userService
   def authInfoRepository: AuthInfoRepository         = controllerComponents.authInfoRepository

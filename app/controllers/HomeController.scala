@@ -1,5 +1,6 @@
 package controllers
 
+import com.mohiva.play.silhouette.api.LogoutEvent
 import javax.inject._
 import play.api.mvc.AnyContent
 import utils.DefaultEnv
@@ -14,4 +15,9 @@ class HomeController @Inject()(cc: SilhouetteControllerComponents[DefaultEnv]) e
     Future.successful(Ok(views.html.index()))
   }
 
+  def logout = SecuredAction.async { implicit request =>
+    val result = Redirect(routes.LoginController.loginForm())
+    eventBus.publish(LogoutEvent(request.identity, request))
+    authenticatorService.discard(request.authenticator, result)
+  }
 }

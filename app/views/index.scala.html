@@ -1,9 +1,9 @@
-@import forms.SignInForm
+@import forms.LoginForm
 
 @()(implicit request: AppRequestHeader with IdentityAwareProvider[User])
 
 @request.identity.fold(
-    signin(SignInForm.form)
+    login(LoginForm.form)
 )(
     user => home(user)
 )

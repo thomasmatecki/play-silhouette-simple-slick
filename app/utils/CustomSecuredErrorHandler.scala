@@ -24,7 +24,7 @@ class CustomSecuredErrorHandler extends SecuredErrorHandler with Logging {
     */
   override def onNotAuthenticated(implicit request: RequestHeader) = {
     logger.warn(s"onNotAuthenticated: request = ${request}")
-    Future.successful(Redirect(controllers.routes.AuthenticationController.signInForm()))
+    Future.successful(Redirect(controllers.routes.LoginController.loginForm()))
   }
 
   /**
@@ -38,7 +38,7 @@ class CustomSecuredErrorHandler extends SecuredErrorHandler with Logging {
   override def onNotAuthorized(implicit request: RequestHeader) = {
     logger.warn(s"onNotAuthorized: request = ${request}")
     Future.successful(
-      Redirect(controllers.routes.AuthenticationController.signInForm())
+      Redirect(controllers.routes.LoginController.loginForm())
         .flashing("login-error" -> "Access Denied"))
   }
 }
