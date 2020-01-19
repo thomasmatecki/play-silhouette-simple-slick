@@ -4,35 +4,33 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.services.IdentityService
-import com.mohiva.play.silhouette.api.util.{PasswordHasherRegistry, PasswordInfo}
+import com.mohiva.play.silhouette.api.util.{ PasswordHasherRegistry, PasswordInfo }
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import forms.SignUpForm
 import play.api.Logging
-import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 class UserService @Inject()(protected val dbConfigProvider: DatabaseConfigProvider,
                             passwordHasherRegistry: PasswordHasherRegistry,
                             authInfoRepository: AuthInfoRepository)(implicit ec: ExecutionContext)
     extends IdentityService[User]
-    with HasDatabaseConfigProvider[JdbcProfile] with Logging {
+    with HasDatabaseConfigProvider[JdbcProfile]
+    with Logging {
 
   import profile.api._
 
-  override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = {
-    logger.debug(s"retrieve: loginInfo = ${loginInfo}")
+  override def retrieve(loginInfo: LoginInfo): Future[Option[User]] =
     db.run(
       userTable
         .filter(user => user.providerKey === loginInfo.providerKey && user.providerID === loginInfo.providerID)
         .result
         .headOption)
-  }
 
   def create(data: SignUpForm.Data): Future[LoginInfo] = {
-    logger.debug(s"create: data = ${data}")
     val user = User(
       id = None,
       firstName = Some(data.firstName),

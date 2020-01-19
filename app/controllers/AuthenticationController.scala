@@ -1,14 +1,14 @@
 package controllers
 
-import com.mohiva.play.silhouette.api.{ LoginInfo, LogoutEvent }
 import com.mohiva.play.silhouette.api.services.AuthenticatorResult
 import com.mohiva.play.silhouette.api.util.Credentials
+import com.mohiva.play.silhouette.api.{ LoginEvent, LoginInfo, LogoutEvent }
 import com.mohiva.play.silhouette.impl.exceptions.IdentityNotFoundException
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import forms._
 import javax.inject.Inject
 import play.api.data.Form
-import play.api.mvc.{ Cookie, RequestHeader }
+import play.api.mvc.RequestHeader
 import utils.DefaultEnv
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -24,26 +24,20 @@ class AuthenticationController @Inject()(cc: SilhouetteControllerComponents[Defa
     SignUpForm.form.bindFromRequest.fold(
       (hasErrors: Form[SignUpForm.Data]) => Future.successful(BadRequest(views.html.signup(hasErrors))),
       (success: SignUpForm.Data) => {
-        userService.retrieve(LoginInfo(CredentialsProvider.ID, success.email)).flatMap {
+        val loginUserInfo = LoginInfo(CredentialsProvider.ID, success.email)
+        userService.retrieve(loginUserInfo).flatMap {
           case Some(user) =>
             val conflictForm = SignUpForm.form
               .fill(success.copy(password = ""))
               .withGlobalError(s"Email conflict exists for email address!")
             Future.successful(BadRequest(views.html.signup(conflictForm)))
           case None =>
-            userService
-              .create(success)
-              .flatMap { loginInfo =>
-                loginInfoToCookie(loginInfo).flatMap { cookie =>
-                  val result = Redirect(routes.HomeController.index())
-                  authenticatorService.embed(cookie, result)
-                }
-              }
-              .recoverWith {
-                case e =>
-                  logger.error("Cannot create user", e)
-                  Future.successful(AuthenticatorResult(Redirect(routes.AuthenticationController.signInForm)))
-              }
+            val future = userService.create(success).flatMap(authenticateLoginInfo)
+            future.recoverWith {
+              case e =>
+                logger.error("Cannot create user", e)
+                Future.successful(AuthenticatorResult(Redirect(routes.AuthenticationController.signInForm)))
+            }
         }
       }
     )
@@ -59,14 +53,10 @@ class AuthenticationController @Inject()(cc: SilhouetteControllerComponents[Defa
         Future.successful(BadRequest(views.html.signin(hasErrors)))
       },
       success => {
+        val credentials = Credentials(success.email, success.password)
         credentialsProvider
-          .authenticate(credentials = Credentials(success.email, success.password))
-          .flatMap { loginInfo =>
-            loginInfoToCookie(loginInfo).flatMap { cookie =>
-              val result = Redirect(routes.HomeController.index()).flashing("welcome" -> "Welcome!")
-              authenticatorService.embed(cookie, result)
-            }
-          }
+          .authenticate(credentials)
+          .flatMap(authenticateLoginInfo)
           .recover {
             case e: IdentityNotFoundException =>
               Redirect(routes.AuthenticationController.signInForm()).flashing("login-error" -> "Invalid user/password")
@@ -85,6 +75,20 @@ class AuthenticationController @Inject()(cc: SilhouetteControllerComponents[Defa
     authenticatorService.discard(request.authenticator, result)
   }
 
-  private def loginInfoToCookie(loginInfo: LoginInfo)(implicit rh: RequestHeader): Future[Cookie] =
-    authenticatorService.create(loginInfo).flatMap(authenticatorService.init)
+  protected def authenticateLoginInfo(loginInfo: LoginInfo)(
+      implicit request: RequestHeader): Future[AuthenticatorResult] = {
+    val result = Redirect(routes.HomeController.index()).flashing("welcome" -> "Welcome!")
+    authenticatorService
+      .create(loginInfo)
+      .flatMap { authenticator =>
+        authenticatorService.init(authenticator).flatMap { v =>
+          for {
+            maybeUser <- userService.retrieve(loginInfo)
+            user      <- maybeUser
+          } eventBus.publish(LoginEvent(user, request))
+          authenticatorService.embed(v, result)
+        }
+      }
+  }
+
 }
