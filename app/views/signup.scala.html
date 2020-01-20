@@ -1,17 +1,28 @@
-@(signUpForm: Form[forms.SignUpForm.Data])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
 
-    @import helper._
+@import helper._
+
+@(signUpForm: Form[forms.SignUpForm.Data])(implicit request: MessagesRequestHeader)
+@import request.{messages => m}
 
 @main("Sign Up!") {
 
     <div class="jumbotron">
-    @form(action = routes.AuthenticationController.signUpSubmit()) {
-        @helper.inputText(signUpForm("firstName"))
-        @helper.inputText(signUpForm("lastName"))
-        @helper.inputText(signUpForm("email"))
-        @helper.inputPassword(signUpForm("password"))
+    @signUpForm.globalErrors.map{ error =>
+    <div class="alert alert-danger alert-dismissible show">
+        <strong>Error!</strong> @error.format
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    }
+
+    @form(action = routes.SignUpController.signUpSubmit()) {
+        @helper.inputText(signUpForm("firstName"), Symbol("_label") -> m("firstName"), Symbol("placeholder") -> m("firstName"))
+        @helper.inputText(signUpForm("lastName"), Symbol("_label") -> m("lastName"), Symbol("placeholder") -> m("lastName"))
+        @helper.inputText(signUpForm("email"), Symbol("_label") -> m("email"), Symbol("placeholder") -> m("email"))
+        @helper.inputPassword(signUpForm("password"), Symbol("_label") -> m("password"), Symbol("placeholder") -> m("password"))
+        @CSRF.formField
+
         <button id="submit" type="submit" value="submit" class="btn btn-lg btn-primary btn-block">Submit</button>
-        <a href="@routes.AuthenticationController.signInForm()">Sign In</a>
+        <a href="@routes.LoginController.loginForm()">Sign In</a>
     }
     </div>
 }

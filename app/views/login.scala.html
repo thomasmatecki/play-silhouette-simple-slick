@@ -1,0 +1,31 @@
+@import helper._
+
+@(loginForm: Form[forms.LoginForm.Data])(implicit request: MessagesRequestHeader)
+@import request.{messages => m}
+
+@main("Sign In!") {
+
+    @request.flash.get("welcome").map { msg =>
+    <div class="col-md-6 col-md-offset-3 alert">
+        <a href="#" class="close" data-dismiss="alert">&times;</a>
+        <strong>@{msg}</strong>
+    </div>
+    }
+
+    @request.flash.get("login-error").map{ msg => 
+        <div class="col-md-6 col-md-offset-3 alert alert-danger alert-error">
+        <a href="#" class="close" data-dismiss="alert">&times;</a>
+        <strong>@{msg}</strong>
+        </div>
+    }
+    <div class="jumbotron">
+    @form(action = routes.LoginController.loginSubmit()) {
+        @helper.inputText(loginForm("email"), Symbol("_label") -> null, Symbol("_showConstraints") -> false, Symbol("class") -> "form-control input-md", Symbol("placeholder") -> m("email"))
+        @helper.inputPassword(loginForm("password"), Symbol("_label") -> null, Symbol("_showConstraints") -> false, Symbol("class") -> "form-control input-md", Symbol("placeholder") -> m("password"))
+        @CSRF.formField
+
+        <button id="submit" type="submit" value="submit" class="btn btn-lg btn-primary btn-block">Login</button>
+        <a href="@routes.SignUpController.signUpForm()">Sign Up</a>
+    }
+    </div>
+}

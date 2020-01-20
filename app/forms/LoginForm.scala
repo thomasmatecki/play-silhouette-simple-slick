@@ -3,17 +3,15 @@ package forms
 import play.api.data.Form
 import play.api.data.Forms._
 
-object SignInForm {
+object LoginForm {
 
   val form = Form(
     mapping(
-      "email" -> email,
+      "email"    -> email,
       "password" -> nonEmptyText
     )(Data.apply)(Data.unapply)
   )
 
-  case class Data(email: String,
-                  password: String)
+  case class Data(email: String, password: String)
 
 }
-

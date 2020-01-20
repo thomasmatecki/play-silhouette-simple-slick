@@ -1,7 +1,6 @@
 package models
 
 import javax.inject.Inject
-
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.PasswordInfo
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
@@ -9,12 +8,15 @@ import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 class PasswordDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends DelegableAuthInfoDAO[PasswordInfo]
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import profile.api._
+
+  override val classTag: ClassTag[PasswordInfo] = scala.reflect.classTag[PasswordInfo]
 
   override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = {
     val result =
@@ -53,5 +55,5 @@ class PasswordDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
 
   override def remove(loginInfo: LoginInfo): Future[Unit] = db.run(
     passwordTable.filter(password => password.key === loginInfo.providerKey).delete
-  ).map(i => Unit)
+  ).map(i => ())
 }
