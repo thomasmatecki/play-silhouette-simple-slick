@@ -23,38 +23,45 @@ class UserService @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
 
   import profile.api._
 
-  override def retrieve(loginInfo: LoginInfo): Future[Option[User]] =
-    db.run(
-      userTable
-        .filter(user => user.providerKey === loginInfo.providerKey && user.providerID === loginInfo.providerID)
-        .result
-        .headOption)
+  override def retrieve(loginInfo: LoginInfo): Future[Option[User]] = {
+    val usersQuery = profileTable
+      .filter(p => p.providerID === loginInfo.providerID && p.providerKey === loginInfo.providerKey)
+      .flatMap(_.user)
+    db.run(usersQuery.result.headOption)
+  }
+
+  def profiles(userId: Int): Future[Seq[LoginInfo]] = {
+    lazy val loginInfoFromUserIdQuery = for {
+      profile <- profileTable if profile.userId === Option(userId)
+    } yield profile
+    db.run(loginInfoFromUserIdQuery.result).map(_.map(_.loginInfo))
+  }
 
   def create(data: SignUpForm.Data): Future[LoginInfo] = {
-    val user = User(
-      id = None,
-      firstName = Some(data.firstName),
-      lastName = Some(data.lastName),
-      email = Some(data.email),
+    val user =
+      User(id = None, firstName = Some(data.firstName), lastName = Some(data.lastName), email = Some(data.email))
+
+    def profile(userId: Int, email: String): Profile = Profile(
+      userId = Some(userId),
       providerID = CredentialsProvider.ID,
-      providerKey = data.email)
+      providerKey = email
+    )
 
     db.run {
-      (userTable returning userTable.map(_.id)) += user
+      for {
+        userId <- (userTable returning userTable.map(_.id)) += user
+        newProfile = profile(userId.head, data.email)
+        _ <- profileTable += newProfile
+      } yield newProfile.loginInfo
     } andThen {
       case Failure(e: Throwable) =>
         logger.error("Cannot create user!", e)
         None
 
-      case Success(id: Option[Int]) =>
-        logger.info(s"Successfully created user ${id}")
-
-        val loginInfo: LoginInfo   = LoginInfo(CredentialsProvider.ID, data.email)
+      case Success(loginInfo: LoginInfo) =>
+        logger.info(s"Successfully created loginInfo ${loginInfo}")
         val authInfo: PasswordInfo = passwordHasherRegistry.current.hash(data.password)
         authInfoRepository.add(loginInfo, authInfo)
-    } map { _id =>
-      LoginInfo(CredentialsProvider.ID, user.email.get)
     }
-
   }
 }
